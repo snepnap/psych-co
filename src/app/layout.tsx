@@ -1,64 +1,42 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Outfit, Open_Sans } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/query";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-open-sans" });
 
 export const metadata: Metadata = {
-  title: {
-    default: "PSYCH Co. | Mental Wellness Platform",
-    template: "%s | PSYCH Co.",
-  },
-  description:
-    "Your comprehensive mental wellness companion — track mood, complete assessments, journal your thoughts, and connect with specialists.",
-  keywords: [
-    "mental health",
-    "psychology",
-    "mood tracker",
-    "wellness",
-    "therapy",
-    "mental wellness",
-  ],
-  authors: [{ name: "PSYCH Co." }],
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    title: "PSYCH Co. | Mental Wellness Platform",
-    description: "Your comprehensive mental wellness companion.",
-    siteName: "PSYCH Co.",
-  },
+  title: "PSYCH Co. — Mindspace",
+  description: "A premium interactive experience for your mental wellness.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${outfit.variable} font-sans antialiased`}
-      >
+      <body className={`${inter.variable} ${outfit.variable} ${openSans.variable} font-open-sans antialiased bg-background min-h-screen flex flex-col overflow-x-hidden`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
-          disableTransitionOnChange={false}
+          disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <QueryClientProvider client={queryClient}>
+            <Navbar />
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+            <Footer />
+          </QueryClientProvider>
         </ThemeProvider>
       </body>
     </html>
