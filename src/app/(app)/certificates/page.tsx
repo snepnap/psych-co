@@ -145,7 +145,7 @@ export default function CertificatesPage() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {certificates.map((cert) => (
+            {certificates.map((cert: any) => (
               <CertificateCard key={cert.id} certificate={cert} />
             ))}
           </div>

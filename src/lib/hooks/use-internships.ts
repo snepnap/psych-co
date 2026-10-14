@@ -28,7 +28,7 @@ export const useInternships = (options: {
       const { data, error } = await query;
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         title: row.title,
         description: row.description,
@@ -226,7 +226,7 @@ export const useMyEnrollments = () => {
 
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         internship_id: row.internship_id,
         profile_id: row.profile_id,

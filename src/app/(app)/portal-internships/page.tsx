@@ -123,7 +123,7 @@ export default function InternshipsPage() {
         <div className="grid gap-6">
           {/* Responsive grid: 1 column on small screens, 2 on medium, 3 on large */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {internships.map((internship) => (
+            {internships.map((internship: any) => (
               <InternshipCard
                 key={internship.id}
                 internship={internship}

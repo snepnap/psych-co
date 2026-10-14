@@ -31,7 +31,7 @@ export const useCertificates = (options: {
       const { data, error } = await query;
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         recipient_id: row.recipient_id,
         issued_by: row.issued_by,
@@ -213,7 +213,7 @@ export const useMyCertificates = () => {
 
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         recipient_id: row.recipient_id,
         issued_by: row.issued_by,

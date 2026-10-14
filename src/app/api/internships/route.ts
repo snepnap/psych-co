@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     if (error) throw error;
 
     // Transform data to match Internship type (including psychologist)
-    const internships: Internship[] = data.map((row) => ({
+    const internships: Internship[] = (data as any[]).map((row: any) => ({
       id: row.id,
       title: row.title,
       description: row.description,

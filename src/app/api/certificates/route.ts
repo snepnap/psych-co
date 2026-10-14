@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    const certificates: Certificate[] = data.map((row) => ({
+    const certificates: Certificate[] = (data as any[]).map((row: any) => ({
       id: row.id,
       recipient_id: row.recipient_id,
       issued_by: row.issued_by,

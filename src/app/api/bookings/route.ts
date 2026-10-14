@@ -54,7 +54,7 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    const bookings: Booking[] = data.map((row) => ({
+    const bookings: Booking[] = (data as any[]).map((row: any) => ({
       id: row.id,
       psychologist_id: row.psychologist_id,
       client_id: row.client_id,

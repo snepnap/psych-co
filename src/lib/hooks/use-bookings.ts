@@ -31,7 +31,7 @@ export const useBookings = (options: {
       const { data, error } = await query;
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         psychologist_id: row.psychologist_id,
         client_id: row.client_id,
@@ -220,7 +220,7 @@ export const useMyBookings = () => {
 
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         psychologist_id: row.psychologist_id,
         client_id: row.client_id,
@@ -277,7 +277,7 @@ export const useUpcomingBookings = () => {
 
       if (error) throw error;
 
-      return data.map((row) => ({
+      return (data as any[]).map((row: any) => ({
         id: row.id,
         psychologist_id: row.psychologist_id,
         client_id: row.client_id,
