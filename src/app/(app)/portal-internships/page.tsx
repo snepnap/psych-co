@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { PageWrapper } from "@/components/layout/page-wrapper";
 
 export default function InternshipsPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -53,7 +54,7 @@ export default function InternshipsPage() {
   });
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -62,7 +63,16 @@ export default function InternshipsPage() {
     e.preventDefault();
     setCreateError(null);
     try {
-      await createInternship.mutateAsync(formData);
+      await createInternship.mutateAsync({
+        title: formData.title,
+        description: formData.description || null,
+        psychologist_id: profile?.id ?? "unknown",
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        max_participants: parseInt(formData.max_participants || "10", 10),
+        price_cents: formData.price_cents ? Math.round(parseFloat(formData.price_cents) * 100) : null,
+        status: formData.status as any,
+      });
       setIsCreateDialogOpen(false);
       // Reset form
       setFormData({
@@ -84,8 +94,8 @@ export default function InternshipsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <PageWrapper title="Internships" subtitle="Explore and manage accredited psychology internships">
+      <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold font-outfit text-foreground">
           Internships
         </h1>
@@ -99,7 +109,7 @@ export default function InternshipsPage() {
 
       {error && (
         <div className="p-4 mb-4 rounded-lg bg-destructive/20 text-destructive">
-          {error}
+          {error.message}
         </div>
       )}
 
@@ -238,7 +248,6 @@ export default function InternshipsPage() {
               </Button>
               <Button
                 variant="neumorphism"
-                isLoading={createInternship.isPending}
                 onClick={handleSubmit}
                 disabled={createInternship.isPending}
               >
@@ -248,6 +257,6 @@ export default function InternshipsPage() {
           </form>
         </div>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

@@ -43,7 +43,7 @@ export const useInternships = (options: {
           ? {
               id: row.psychologist.id,
               full_name: row.psychologist.full_name,
-              role: '',
+              role: 'psychologist' as const,
               avatar_url: row.psychologist.avatar_url,
               bio: null,
               created_at: '',
@@ -86,7 +86,7 @@ export const useInternship = (id: string) => {
           ? {
               id: data.psychologist.id,
               full_name: data.psychologist.full_name,
-              role: '',
+              role: 'psychologist' as const,
               avatar_url: data.psychologist.avatar_url,
               bio: null,
               created_at: '',

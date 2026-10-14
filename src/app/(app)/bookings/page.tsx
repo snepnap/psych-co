@@ -1,14 +1,14 @@
 "use client";
 
-import { useBookings } from "@/lib/hooks/use-bookings";
-import { usePsychologists } from "@/lib/hooks/use-psychologists";
-import { getProfile } from "@/lib/supabase";
+import React, { useState, useEffect, useCallback } from "react";
+import { getProfile, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { SessionCard } from "@/components/session-card";
-import { Plus } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Link } from "next/link";
+import { Plus, Calendar, Clock, Video, UserCheck, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PageWrapper } from "@/components/layout/page-wrapper";
+import type { Booking } from "@/lib/types";
 
 export default function BookingsPage() {
   const [profile, setProfile] = useState<any>(null);
@@ -41,7 +41,7 @@ export default function BookingsPage() {
           .order("full_name");
 
         if (error) throw error;
-        setPsychologists(data);
+        setPsychologists(data ?? []);
       } catch (err: any) {
         console.error("Failed to fetch psychologists:", err);
       } finally {
@@ -52,43 +52,46 @@ export default function BookingsPage() {
   }, []);
 
   // Fetch bookings for the current user
-  const [bookingsData, setBookingsData] = useState<any[]>([]);
+  const [bookingsData, setBookingsData] = useState<Booking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
 
+  const fetchBookings = useCallback(async () => {
+    if (!profile) return;
+    setBookingsLoading(true);
+    setBookingsError(null);
+    try {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(`
+          *,
+          psychologist:profiles(id,full_name,avatar_url),
+          client:profiles(id,full_name,avatar_url)
+        `)
+        .or(`psychologist_id.eq.${profile.id},client_id.eq.${profile.id}`)
+        .order("starts_at", { ascending: true });
+
+      if (error) throw error;
+      setBookingsData((data as any) ?? []);
+    } catch (err: any) {
+      setBookingsError(err.message ?? "Failed to fetch bookings");
+    } finally {
+      setBookingsLoading(false);
+    }
+  }, [profile]);
+
   useEffect(() => {
     if (!profileLoading && profile) {
-      const fetchBookings = async () => {
-        setBookingsLoading(true);
-        setBookingsError(null);
-        try {
-          const { data, error } = await supabase
-            .from("bookings")
-            .select(`
-              *,
-              psychologist:profiles(id,full_name,avatar_url),
-              client:profiles(id,full_name,avatar_url)
-            `)
-            .or(`psychologist_id.eq.${profile.id},client_id.eq.${profile.id}`)
-            .order("starts_at", { ascending: true });
-
-          if (error) throw error;
-          setBookingsData(data);
-        } catch (err: any) {
-          setBookingsError(err.message ?? "Failed to fetch bookings");
-        } finally {
-          setBookingsLoading(false);
-        }
-      };
       fetchBookings();
-    } else {
+    } else if (!profileLoading && !profile) {
       setBookingsData([]);
       setBookingsLoading(false);
     }
-  }, [profileLoading, profile]);
+  }, [profileLoading, profile, fetchBookings]);
 
   // State for create booking dialog
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     psychologistId: "",
@@ -99,7 +102,9 @@ export default function BookingsPage() {
     priceCents: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -107,35 +112,34 @@ export default function BookingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateError(null);
-    // Basic validation
-    if (!formData.psychologistId || !formData.clientId || !formData.date || !formData.startTime || !formData.endTime) {
+
+    const clientId = profile?.role === "client" ? profile?.id : formData.clientId || profile?.id;
+    const psychologistId = formData.psychologistId;
+
+    if (!psychologistId || !clientId || !formData.date || !formData.startTime || !formData.endTime) {
       setCreateError("Please fill in all required fields");
       return;
     }
+
+    setIsSubmitting(true);
     try {
-      // Combine date and time into ISO strings
       const startsAt = new Date(`${formData.date}T${formData.startTime}`).toISOString();
       const endsAt = new Date(`${formData.date}T${formData.endTime}`).toISOString();
-      // Call the Supabase function to create booking (we'll use the API route)
-      // We'll use the useCreateBooking hook? We haven't created it yet.
-      // For now, we'll do a direct insert via supabase.
-      const { data, error } = await supabase
+
+      const { error } = await supabase
         .from("bookings")
         .insert([
           {
-            psychologist_id: formData.psychologistId,
-            client_id: formData.clientId,
+            psychologist_id: psychologistId,
+            client_id: clientId,
             starts_at: startsAt,
             ends_at: endsAt,
-            price_cents: formData.priceCents ? parseInt(formData.priceCents, 10) : null,
+            price_cents: formData.priceCents ? parseInt(formData.priceCents, 10) : 12000,
             status: "pending",
           },
-        ])
-        .select()
-        .single();
+        ]);
 
       if (error) throw error;
-      // Close dialog and reset form
       setIsCreateDialogOpen(false);
       setFormData({
         psychologistId: "",
@@ -145,63 +149,90 @@ export default function BookingsPage() {
         endTime: "",
         priceCents: "",
       });
-      // Refetch bookings
-      // We'll trigger a refetch by setting a temporary state or we can rely on the useEffect that runs on profile change?
-      // We'll just set a flag to refetch; we'll do a simple refetch by calling the fetchBookings function again.
-      // We'll do it after a short delay to avoid infinite loop.
-      setTimeout(() => {
-        fetchBookings();
-      }, 1000);
+      await fetchBookings();
     } catch (err: any) {
       setCreateError(err.message ?? "Failed to create booking");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (profileLoading) {
-    return <div className="p-8">Loading...</div>;
+    return (
+      <PageWrapper title="Tele-Health Sessions" subtitle="Loading your clinical schedule...">
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+        </div>
+      </PageWrapper>
+    );
   }
 
-  // Determine the other party for the dropdown: if user is client, show psychologists; if user is psychologist, show clients? We'll keep simple: always show psychologists for now.
-  // We'll filter out the current user if they are a psychologist.
-  const psychologistOptions = psychologists
-    .filter((p: any) => p.id !== profile?.id)
-    .map((p: any) => ({
-      value: p.id,
-      label: p.full_name,
-      avatar: p.avatar_url,
-    }));
+  const psychologistOptions = psychologists.map((p) => ({
+    value: p.id,
+    label: p.full_name || "Specialist",
+  }));
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold font-outfit text-foreground">
-          My Bookings
-        </h1>
-        <Button
-          variant="neumorphism"
-          size="lg"
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Book Session
-        </Button>
-      </div>
+    <PageWrapper title="Tele-Health Bookings" subtitle="Encrypted HIPAA-compliant tele-consultations & appointment tracking">
+      <div className="space-y-8">
+        {/* Top Header Card */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0c1220]/80 p-6 md:p-8 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.36)]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Synchronous Care Portal</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white font-outfit">
+                Clinical Consultations & Sessions
+              </h1>
+              <p className="text-sm text-zinc-400 max-w-xl">
+                Review your upcoming tele-sessions, join secure end-to-end encrypted video rooms, and schedule priority slots with verified doctors.
+              </p>
+            </div>
 
-      {bookingsError && (
-        <div className="p-4 mb-4 rounded-lg bg-destructive/20 text-destructive">
-          {bookingsError}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="neumorphism"
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-emerald-500 hover:bg-emerald-400 text-black font-semibold shadow-lg shadow-emerald-500/20"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Book New Session
+              </Button>
+            </div>
+          </div>
         </div>
-      )}
 
-      {bookingsLoading ? (
-        <div className="p-8 text-center text-muted-foreground">Loading bookings...</div>
-      ) : bookingsData.length === 0 ? (
-        <div className="p-8 text-center text-muted-foreground">
-          No bookings yet.
-        </div>
-      ) : (
-        <div className="grid gap-6">
+        {bookingsError && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
+            {bookingsError}
+          </div>
+        )}
+
+        {bookingsLoading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {bookingsData.map((booking) => (
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 animate-pulse rounded-2xl border border-white/5 bg-white/5" />
+            ))}
+          </div>
+        ) : bookingsData.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-[#0c1220]/60 p-12 text-center backdrop-blur-xl">
+            <Video className="mx-auto h-12 w-12 text-zinc-500 mb-4" />
+            <h3 className="text-lg font-semibold text-white font-outfit mb-1">No Scheduled Consultations</h3>
+            <p className="text-sm text-zinc-400 max-w-md mx-auto mb-6">
+              You currently don&apos;t have any active appointments. Connect with our vetted psychologists to start your journey.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Schedule First Session
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {bookingsData.map((booking: Booking) => (
               <SessionCard
                 key={booking.id}
                 booking={booking}
@@ -209,124 +240,137 @@ export default function BookingsPage() {
               />
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Create Booking Dialog */}
-      <div
-        className={cn(
-          "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
-          isCreateDialogOpen ? "block" : "hidden"
         )}
-      >
-        <div className="bg-card/90 backdrop-blur-lg rounded-2xl p-6 w-full max-w-md">
-          <h2 className="text-2xl font-bold font-outfit text-foreground mb-4">
-            Book a Session
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Select Psychologist
-              </label>
-              <select
-                id="psychologistId"
-                name="psychologistId"
-                value={formData.psychologistId}
-                onChange={handleInputChange}
-                required
-                className={cn(
-                  "neumorphism-input w-full",
-                  "h-10"
-                )}
-              >
-                <option value="">Select psychologist</option>
-                {psychologistOptions.map((opt: any) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {psychologistsLoading && (
-                <p className="text-xs text-muted-foreground mt-1">Loading psychologists...</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Date
-              </label>
-              <input
-                id="date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-                className={cn("neumorphism-input w-full", "h-10")}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Start Time
-                </label>
-                <input
-                  id="startTime"
-                  name="startTime"
-                  type="time"
-                  value={formData.startTime}
-                  onChange={handleInputChange}
-                  required
-                  className={cn("neumorphism-input w-full", "h-10")}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  End Time
-                </label>
-                <input
-                  id="endTime"
-                  name="endTime"
-                  type="time"
-                  value={formData.endTime}
-                  onChange={handleInputChange}
-                  required
-                  className={cn("neumorphism-input w-full", "h-10")}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Price (cents) - optional
-              </label>
-              <input
-                id="priceCents"
-                name="priceCents"
-                type="number"
-                min="0"
-                value={formData.priceCents}
-                onChange={handleInputChange}
-                className={cn("neumorphism-input w-full", "h-10")}
-              />
-            </div>
 
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="neumorphism"
-                isLoading={false} // we could set a loading state
-                onClick={handleSubmit}
-              >
-                Book Session
-              </Button>
+        {/* Modal Dialog for Scheduling */}
+        {isCreateDialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            <div className="relative w-full max-w-lg rounded-2xl border border-white/10 bg-[#0c1220] p-6 shadow-2xl">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                <h2 className="text-xl font-bold font-outfit text-white">
+                  Schedule Clinical Consultation
+                </h2>
+                <button
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  className="rounded-lg p-1 text-zinc-400 hover:bg-white/10 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {createError && (
+                <div className="mt-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
+                  {createError}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Select Specialist
+                  </label>
+                  <select
+                    id="psychologistId"
+                    name="psychologistId"
+                    value={formData.psychologistId}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                  >
+                    <option value="">Select psychologist...</option>
+                    {psychologistOptions.map((opt: any) => (
+                      <option key={opt.value} value={opt.value} className="bg-[#0c1220] text-white">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Consultation Date
+                  </label>
+                  <input
+                    id="date"
+                    name="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                      Start Time
+                    </label>
+                    <input
+                      id="startTime"
+                      name="startTime"
+                      type="time"
+                      value={formData.startTime}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                      End Time
+                    </label>
+                    <input
+                      id="endTime"
+                      name="endTime"
+                      type="time"
+                      value={formData.endTime}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                    Session Fee (cents)
+                  </label>
+                  <input
+                    id="priceCents"
+                    name="priceCents"
+                    type="number"
+                    min="0"
+                    placeholder="12000 (standard €120.00)"
+                    value={formData.priceCents}
+                    onChange={handleInputChange}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                    className="border-white/10 text-zinc-300 hover:bg-white/5"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="neumorphism"
+                    disabled={isSubmitting}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-semibold"
+                  >
+                    {isSubmitting ? "Booking..." : "Confirm Booking"}
+                  </Button>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
+          </div>
+        )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

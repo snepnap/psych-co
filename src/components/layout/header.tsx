@@ -1,11 +1,11 @@
 "use client";
 
-import { Bell, Search, ChevronDown } from "lucide-react";
+import { Bell, Search, Video, ShieldAlert, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface HeaderProps {
   title?: string;
@@ -15,59 +15,91 @@ interface HeaderProps {
 export function Header({ title = "Dashboard", subtitle }: HeaderProps) {
   return (
     <motion.header
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="sticky top-0 z-30 flex h-16 items-center gap-4 glass border-b border-border/50 px-6"
+      className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 bg-[#0d121d]/85 dark:bg-[#0d121d]/85 backdrop-blur-2xl border-b border-white/10 px-6 shadow-sm"
     >
-      {/* Page title */}
-      <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-bold font-outfit truncate text-foreground">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
-        )}
+      {/* Page title & breadcrumb */}
+      <div className="flex items-center gap-3 min-w-0">
+        <div>
+          <h1 className="text-lg font-bold font-outfit tracking-tight text-white truncate">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-[11px] text-slate-400 truncate hidden sm:block">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative hidden md:flex items-center w-64">
-        <Search className="absolute left-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-        <Input
+      {/* Center Search Bar */}
+      <div className="relative hidden lg:flex items-center w-80">
+        <Search className="absolute left-3.5 h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+        <input
           id="header-search"
-          placeholder="Search..."
-          className="pl-9 h-9 bg-muted/50 border-border/50 focus-visible:ring-1"
-          aria-label="Search the platform"
+          type="text"
+          placeholder="Search records, symptoms, therapists... [⌘K]"
+          className="w-full bg-slate-900/60 border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/30 transition-all"
+          aria-label="Search clinical platform"
         />
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {/* Emergency SOS Badge */}
+        <a
+          href="tel:988"
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 transition-all text-xs font-semibold"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
+          <span>Emergency Line</span>
+        </a>
+
+        {/* Telehealth Quick Action */}
+        <Link
+          href="/therapists"
+          className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-semibold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all transform hover:-translate-y-0.5"
+        >
+          <Video className="h-3.5 w-3.5" />
+          <span>Tele-Health</span>
+        </Link>
+
+        {/* Theme Toggle */}
         <ThemeToggle />
 
+        {/* Notification Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative h-9 w-9 rounded-full bg-slate-900/60 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-800"
           aria-label="View notifications"
         >
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
+          <Bell className="h-4 w-4" />
+          <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
         </Button>
 
-        {/* User nav */}
-        <button
-          className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-accent/50 transition-colors duration-200 min-h-[44px] group"
-          aria-label="Open user menu"
-          aria-haspopup="true"
+        {/* Authenticated Profile Capsule */}
+        <Link
+          href="/profile"
+          className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-slate-900/70 border border-white/10 hover:border-emerald-500/40 transition-all shadow-sm group"
         >
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="" alt="User avatar" />
-            <AvatarFallback>U</AvatarFallback>
+          <Avatar className="h-7 w-7 ring-1 ring-emerald-400/50">
+            <AvatarImage
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+              alt="Julian Vance"
+            />
+            <AvatarFallback className="bg-emerald-600 text-white text-[10px]">JV</AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium hidden sm:block">User</span>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground group-hover:rotate-180 transition-transform duration-200" />
-        </button>
+          <div className="flex flex-col text-left">
+            <span className="text-xs font-semibold text-white leading-tight">Julian Vance</span>
+            <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+              <span className="h-1 w-1 rounded-full bg-emerald-400" />
+              Week 6 • Active
+            </span>
+          </div>
+        </Link>
       </div>
     </motion.header>
   );

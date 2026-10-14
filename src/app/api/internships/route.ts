@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         ? {
             id: row.psychologist.id,
             full_name: row.psychologist.full_name,
-            role: '', // role not fetched; could add if needed
+            role: 'psychologist' as const,
             avatar_url: row.psychologist.avatar_url,
             bio: null,
             created_at: '',

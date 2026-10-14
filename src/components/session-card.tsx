@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Calendar, User, Euro, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { Booking } from "@/lib/types";
 
@@ -48,13 +48,18 @@ export const SessionCard = ({
       )}
     >
       <div className="flex items-start space-x-4">
-        {/* Psychologist Avatar (or client?) We'll show psychologist */}
+        {/* Psychologist Avatar */}
         <div className="h-10 w-10 flex-shrink-0">
           {booking.psychologist ? (
-            <Avatar
-              src={booking.psychologist.avatar_url}
-              alt={booking.psychologist.full_name}
-            />
+            <Avatar className="h-10 w-10">
+              <AvatarImage
+                src={booking.psychologist.avatar_url ?? undefined}
+                alt={booking.psychologist.full_name}
+              />
+              <AvatarFallback>
+                {booking.psychologist.full_name?.slice(0, 2).toUpperCase() ?? "DR"}
+              </AvatarFallback>
+            </Avatar>
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-full neumorphism-light border">
               <User className="h-5 w-5 text-primary" />
@@ -102,10 +107,10 @@ export const SessionCard = ({
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span>– {formatDate(booking.ends_at)} at {formatTime(booking.ends_at)}</span>
             </div>
-            {booking.price_cents !== null && (
+            {booking.price_cents !== null && booking.price_cents !== undefined && (
               <div className="flex items-center space-x-2">
                 <Euro className="h-4 w-4 text-muted-foreground" />
-                <span>€{(booking.price_cents / 100).toFixed(2)}</span>
+                <span>€{((booking.price_cents ?? 0) / 100).toFixed(2)}</span>
               </div>
             )}
           </div>

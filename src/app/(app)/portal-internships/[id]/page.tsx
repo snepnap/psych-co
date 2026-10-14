@@ -6,17 +6,15 @@ import { useEnrollInternship } from "@/lib/hooks/use-internships";
 import { getProfile } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { Calendar, Users, Euro, CheckCircle2, X } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Calendar, Users, Euro, CheckCircle2, X, Brain } from "lucide-react";
 
-export default function InternshipDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+export default function InternshipDetailPage() {
+  const params = useParams();
+  const id = params?.id as string;
 
   const {
     data: internship,
@@ -52,7 +50,7 @@ export default function InternshipDetailPage({
   }
 
   if (error) {
-    return <div className="p-8">Error: {error}</div>;
+    return <div className="p-8">Error: {error.message}</div>;
   }
 
   if (!internship) {
@@ -120,10 +118,15 @@ export default function InternshipDetailPage({
           <div className="flex items-start space-x-4">
             <div className="h-12 w-12 flex-shrink-0">
               {internship.psychologist ? (
-                <Avatar
-                  src={internship.psychologist.avatar_url}
-                  alt={internship.psychologist.full_name}
-                />
+                <Avatar className="h-12 w-12">
+                  <AvatarImage
+                    src={internship.psychologist.avatar_url ?? undefined}
+                    alt={internship.psychologist.full_name}
+                  />
+                  <AvatarFallback>
+                    {internship.psychologist.full_name?.slice(0, 2).toUpperCase() || "DR"}
+                  </AvatarFallback>
+                </Avatar>
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-full neumorphism-light border">
                   <Brain className="h-6 w-6 text-primary" />
@@ -195,7 +198,7 @@ export default function InternshipDetailPage({
             >
               {internship.status
                 .split("_")
-                .map((w) => w[0] + w.slice(1).toLowerCase())
+                .map((w: string) => w[0] + w.slice(1).toLowerCase())
                 .join(" ")}
             </Badge>
           </div>
@@ -253,7 +256,7 @@ export default function InternshipDetailPage({
             <div className="mt-6">
               <h3 className="text-xl font-semibold font-outfit text-foreground mb-2">
                 Enrolled Participants
-              </div>
+              </h3>
               {/* We would fetch enrollments here and display a list */}
               <p className="text-muted-italic">Enrollment list not implemented yet.</p>
             </div>

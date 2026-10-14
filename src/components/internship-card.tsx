@@ -2,7 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Brain, Calendar, Users, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Internship } from "@/lib/types";
@@ -46,10 +46,15 @@ export const InternshipCard = ({
         {/* Psychologist Avatar */}
         <div className="h-10 w-10 flex-shrink-0">
           {internship.psychologist ? (
-            <Avatar
-              src={internship.psychologist.avatar_url}
-              alt={internship.psychologist.full_name}
-            />
+            <Avatar className="h-10 w-10">
+              <AvatarImage
+                src={internship.psychologist.avatar_url ?? undefined}
+                alt={internship.psychologist.full_name}
+              />
+              <AvatarFallback>
+                {internship.psychologist.full_name?.[0] ?? "P"}
+              </AvatarFallback>
+            </Avatar>
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-full neumorphism-light border">
               <Brain className="h-5 w-5 text-primary" />
@@ -120,3 +125,4 @@ export const InternshipCard = ({
       </div>
     </Link>
   );
+}

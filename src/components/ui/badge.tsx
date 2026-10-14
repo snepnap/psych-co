@@ -12,7 +12,7 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant = "default", soft = false, ...props }, ref) => {
     // Variant mapping to background and text colors
     const variantMap: Record<
-      BadgeProps["variant"],
+      NonNullable<BadgeProps["variant"]>,
       { bg: string; text: string }
     > = {
       default: { bg: "bg-muted", text: "text-muted-foreground" },
@@ -35,7 +35,9 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
           text,
           className
         )}
-        {...props>
+        {...props}
+      >
+        {props.children}
       </span>
     );
   }

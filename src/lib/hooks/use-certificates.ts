@@ -43,7 +43,7 @@ export const useCertificates = (options: {
           ? {
               id: row.recipient.id,
               full_name: row.recipient.full_name,
-              role: '',
+              role: 'client' as const,
               avatar_url: row.recipient.avatar_url,
               bio: null,
               created_at: '',
@@ -53,7 +53,7 @@ export const useCertificates = (options: {
           ? {
               id: row.issuer.id,
               full_name: row.issuer.full_name,
-              role: '',
+              role: 'psychologist' as const,
               avatar_url: row.issuer.avatar_url,
               bio: null,
               created_at: '',
@@ -94,7 +94,7 @@ export const useCertificate = (id: string) => {
           ? {
               id: data.recipient.id,
               full_name: data.recipient.full_name,
-              role: '',
+              role: 'client' as const,
               avatar_url: data.recipient.avatar_url,
               bio: null,
               created_at: '',
@@ -104,7 +104,7 @@ export const useCertificate = (id: string) => {
           ? {
               id: data.issuer.id,
               full_name: data.issuer.full_name,
-              role: '',
+              role: 'psychologist' as const,
               avatar_url: data.issuer.avatar_url,
               bio: null,
               created_at: '',

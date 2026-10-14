@@ -4,10 +4,10 @@ import type { Internship } from '@/lib/types';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { data, error } = await supabase
       .from('internships')
@@ -36,7 +36,7 @@ export async function GET(
         ? {
             id: data.psychologist.id,
             full_name: data.psychologist.full_name,
-            role: '',
+            role: 'psychologist' as const,
             avatar_url: data.psychologist.avatar_url,
             bio: null,
             created_at: '',
@@ -55,10 +55,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const {
       title,
@@ -100,10 +100,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { error } = await supabase
       .from('internships')

@@ -4,10 +4,10 @@ import type { Certificate } from '@/lib/types';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { data, error } = await supabase
       .from('certificates')
@@ -34,7 +34,7 @@ export async function GET(
         ? {
             id: data.recipient.id,
             full_name: data.recipient.full_name,
-            role: '',
+            role: 'client' as const,
             avatar_url: data.recipient.avatar_url,
             bio: null,
             created_at: '',
@@ -44,7 +44,7 @@ export async function GET(
         ? {
             id: data.issuer.id,
             full_name: data.issuer.full_name,
-            role: '',
+            role: 'psychologist' as const,
             avatar_url: data.issuer.avatar_url,
             bio: null,
             created_at: '',
@@ -65,10 +65,10 @@ export async function GET(
 // For simplicity, we'll allow updating the data field and pdf_url (if PDF is regenerated)
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { data: newData, pdf_url } = body;
 
@@ -98,10 +98,10 @@ export async function PATCH(
 // DELETE (revoke certificate) - only if needed
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { error } = await supabase
       .from('certificates')

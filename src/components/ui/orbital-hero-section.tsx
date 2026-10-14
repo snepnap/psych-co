@@ -30,19 +30,19 @@ export const OrbitalHeroSection = ({
         const blobs = heroSection.querySelectorAll('[class*="animate-blob"]');
         blobs.forEach((blob, index) => {
           const speed = 0.02 + index * 0.01;
-          blob.style.transform = `translate(${offsetX * speed * 20}px, ${offsetY * speed * 20}px)`;
+          (blob as HTMLElement).style.transform = `translate(${offsetX * speed * 20}px, ${offsetY * speed * 20}px)`;
         });
       }
     };
 
     const heroSection = document.querySelector('.orbital-hero-section');
     if (heroSection) {
-      heroSection.addEventListener('mousemove', handleMouseMove);
+      heroSection.addEventListener('mousemove', handleMouseMove as EventListener);
       heroSection.addEventListener('mouseenter', () => setIsInteractive(true));
       heroSection.addEventListener('mouseleave', () => setIsInteractive(false));
 
       return () => {
-        heroSection.removeEventListener('mousemove', handleMouseMove);
+        heroSection.removeEventListener('mousemove', handleMouseMove as EventListener);
         heroSection.removeEventListener('mouseenter', () => setIsInteractive(true));
         heroSection.removeEventListener('mouseleave', () => setIsInteractive(false));
       };
@@ -101,13 +101,13 @@ export const OrbitalHeroSection = ({
 
           {/* Layer 2: Medium particles */}
           <div className="absolute top-1/4 left-2/3 h-2 w-2 rounded-full bg-emerald-400/25 animate-float" style={{ animationDuration: '12s', animationDelay: '500ms' }} />
-          <div className="absolute top-3/4 left-1/4 h-1.5 w-1.5 rounded-full bg-teal-300/20 animate-float" style={{ animationDuration: '10s', animationDuration: '1500ms' }} />
-          <div className="absolute top-1/3 left-1/2 h-2.5 w-2.5 rounded-full bg-cyan-400/30 animate-float" style={{ animationDuration: '11s', animationDuration: '800ms' }} />
+          <div className="absolute top-3/4 left-1/4 h-1.5 w-1.5 rounded-full bg-teal-300/20 animate-float" style={{ animationDuration: '10s', animationDelay: '1500ms' }} />
+          <div className="absolute top-1/3 left-1/2 h-2.5 w-2.5 rounded-full bg-cyan-400/30 animate-float" style={{ animationDuration: '11s', animationDelay: '800ms' }} />
 
           {/* Layer 3: Small, fast particles (sparkles) */}
           <div className="absolute top-1/6 left-1/2 h-0.5 w-0.5 rounded-full bg-white/30 animate-float" style={{ animationDuration: '6s', animationDelay: '0s' }} />
-          <div className="absolute top-2/3 left-1/6 h-0.5 w-0.5 rounded-full bg-white/25 animate-float" style={{ animationDuration: '5s', animationDuration: '1000ms' }} />
-          <div className="absolute top-5/6 left-5/6 h-0.5 w-0.5 rounded-full bg-white/35 animate-float" style={{ animationDuration: '7s', animationDuration: '1500ms' }} />
+          <div className="absolute top-2/3 left-1/6 h-0.5 w-0.5 rounded-full bg-white/25 animate-float" style={{ animationDuration: '5s', animationDelay: '1000ms' }} />
+          <div className="absolute top-5/6 left-5/6 h-0.5 w-0.5 rounded-full bg-white/35 animate-float" style={{ animationDuration: '7s', animationDelay: '1500ms' }} />
         </div>
 
         {/* Enhanced Radial scrim for legibility with gradient overlay */}

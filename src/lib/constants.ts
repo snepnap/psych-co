@@ -7,6 +7,9 @@ export const NAV_ITEMS = [
   { label: "Assessment", href: "/assessment", icon: "ClipboardList" },
   { label: "Journal", href: "/journal", icon: "BookOpen" },
   { label: "Therapists", href: "/therapists", icon: "Users" },
+  { label: "Bookings", href: "/bookings", icon: "Calendar" },
+  { label: "Internships", href: "/internships", icon: "GraduationCap" },
+  { label: "Certificates", href: "/certificates", icon: "Award" },
   { label: "Profile", href: "/profile", icon: "User" },
 ] as const;
 

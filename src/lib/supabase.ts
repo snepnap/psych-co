@@ -1,5 +1,4 @@
 import { createClient } from '@/utils/supabase/client';
-import type { Database } from '@/types/supabase';
 
 // Type for Supabase DB (generated from supabase types)
 // If you have generated types, you can import them.

@@ -18,10 +18,10 @@ async function hasOverlappingBooking(psychologistId: string, startsAt: string, e
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { data, error } = await supabase
       .from('bookings')
@@ -50,7 +50,7 @@ export async function GET(
         ? {
             id: data.psychologist.id,
             full_name: data.psychologist.full_name,
-            role: '',
+            role: 'psychologist' as const,
             avatar_url: data.psychologist.avatar_url,
             bio: null,
             created_at: '',
@@ -60,7 +60,7 @@ export async function GET(
         ? {
             id: data.client.id,
             full_name: data.client.full_name,
-            role: '',
+            role: 'client' as const,
             avatar_url: data.client.avatar_url,
             bio: null,
             created_at: '',
@@ -79,10 +79,10 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const {
       psychologist_id,
@@ -148,10 +148,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const { error } = await supabase
       .from('bookings')

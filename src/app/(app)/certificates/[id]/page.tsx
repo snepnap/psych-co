@@ -5,17 +5,15 @@ import { useCertificate } from "@/lib/hooks/use-certificates";
 import { getProfile } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { Calendar, Users, Euro, CheckCircle2, X, Award } from "lucide-react";
+import { useParams } from "next/navigation";
+import { Calendar, Users, Euro, CheckCircle2, X, Award, Brain } from "lucide-react";
 
-export default function CertificateDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
+export default function CertificateDetailPage() {
+  const params = useParams();
+  const id = params?.id as string;
 
   const {
     data: certificate,
@@ -47,7 +45,7 @@ export default function CertificateDetailPage({
   }
 
   if (error) {
-    return <div className="p-8">Error: {error}</div>;
+    return <div className="p-8">Error: {error.message}</div>;
   }
 
   if (!certificate) {
@@ -117,15 +115,18 @@ export default function CertificateDetailPage({
             </h3>
             {certificate.pdf_url ? (
               <div className="mb-4">
-                <Button
-                  variant="outline"
-                  size="sm"
+                <a
                   href={certificate.pdf_url}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  View PDF
-                </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                  >
+                    View PDF
+                  </Button>
+                </a>
               </div>
             ) : (
               <div className="text-center p-6">
@@ -142,10 +143,15 @@ export default function CertificateDetailPage({
           <div className="flex items-start space-x-4">
             <div className="h-12 w-12 flex-shrink-0">
               {certificate.recipient ? (
-                <Avatar
-                  src={certificate.recipient.avatar_url}
-                  alt={certificate.recipient.full_name}
-                />
+                <Avatar className="h-12 w-12">
+                  <AvatarImage
+                    src={certificate.recipient.avatar_url ?? undefined}
+                    alt={certificate.recipient.full_name}
+                  />
+                  <AvatarFallback>
+                    {certificate.recipient.full_name?.slice(0, 2).toUpperCase() || "UC"}
+                  </AvatarFallback>
+                </Avatar>
               ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-full neumorphism-light border">
                   <Award className="h-6 w-6 text-primary" />
@@ -166,10 +172,15 @@ export default function CertificateDetailPage({
           <div className="flex items-start space-x-4 mt-4">
             <div className="h-10 w-10 flex-shrink-0">
               {certificate.issuer ? (
-                <Avatar
-                  src={certificate.issuer.avatar_url}
-                  alt={certificate.issuer.full_name}
-                />
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    src={certificate.issuer.avatar_url ?? undefined}
+                    alt={certificate.issuer.full_name}
+                  />
+                  <AvatarFallback>
+                    {certificate.issuer.full_name?.slice(0, 2).toUpperCase() || "IS"}
+                  </AvatarFallback>
+                </Avatar>
               ) : (
                 <div className="flex h-10 w-10 items-center justify-center rounded-full neumorphism-light border">
                   <Brain className="h-5 w-5 text-primary" />
@@ -244,16 +255,20 @@ export default function CertificateDetailPage({
           {isIssuer || isRecipient ? (
             <div className="mt-6">
               {certificate.pdf_url ? (
-                <Button
-                  variant="neumorphism"
-                  size="lg"
-                  className="w-full"
+                <a
                   href={certificate.pdf_url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full inline-block"
                 >
-                  Download Certificate PDF
-                </Button>
+                  <Button
+                    variant="neumorphism"
+                    size="lg"
+                    className="w-full"
+                  >
+                    Download Certificate PDF
+                  </Button>
+                </a>
               ) : (
                 <Button
                   variant="outline"

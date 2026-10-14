@@ -3,13 +3,19 @@ import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { neomorphism?: boolean; premium?: boolean }
->(({ className, neomorphism = false, premium = false, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & {
+    neomorphism?: boolean;
+    premium?: boolean;
+    glass?: boolean;
+  }
+>(({ className, neomorphism = false, premium = false, glass = false, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
       "rounded-2xl border transition-all duration-500",
-      neomorphism
+      glass
+        ? "bg-[#0c1220]/75 backdrop-blur-xl border-white/10 text-card-foreground shadow-[0_8px_32px_rgba(0,0,0,0.36)]"
+        : neomorphism
         ? "neumorphism-card"
         : premium
           ? "neumorphism-card hover:neumorphism-hover"

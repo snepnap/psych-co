@@ -68,7 +68,7 @@ export async function GET(request: Request) {
         ? {
             id: row.psychologist.id,
             full_name: row.psychologist.full_name,
-            role: '',
+            role: 'psychologist' as const,
             avatar_url: row.psychologist.avatar_url,
             bio: null,
             created_at: '',
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
         ? {
             id: row.client.id,
             full_name: row.client.full_name,
-            role: '',
+            role: 'client' as const,
             avatar_url: row.client.avatar_url,
             bio: null,
             created_at: '',

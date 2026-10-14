@@ -2,244 +2,244 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Menu, X, User } from "lucide-react";
-import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
-import { getProfile } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, ArrowRight, ShieldCheck, HeartPulse, Compass } from "lucide-react";
+import { Button } from "./ui/button";
+import { ApplyModal } from "./shared/ApplyModal";
 
-const links = [
-  { name: "Home", href: "/" },
-  { name: "Internships", href: "/app/internships" },
-  { name: "Certificates", href: "/app/certificates" },
-  { name: "Bookings", href: "/app/bookings" },
+const navLinks = [
+  { name: "Home", href: "/#home", sectionId: "home" },
+  { name: "About", href: "/#about", sectionId: "about" },
+  { name: "Internships", href: "/#internships", sectionId: "internships" },
+  { name: "Courses", href: "/#courses", sectionId: "courses" },
+  { name: "Therapy", href: "/#therapy", sectionId: "therapy" },
+  { name: "Why Us", href: "/#why-us", sectionId: "why-us" },
+  { name: "FAQ", href: "/#faq", sectionId: "faq" },
+  { name: "Contact", href: "/#contact", sectionId: "contact" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
+
+  // Hide the marketing navbar only when specifically browsing authenticated portal inner tools
+  const isAppRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/mood") ||
+    pathname.startsWith("/assessment") ||
+    pathname.startsWith("/journal") ||
+    pathname.startsWith("/therapists") ||
+    pathname.startsWith("/bookings") ||
+    pathname.startsWith("/portal") ||
+    pathname.startsWith("/profile");
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 15);
+
+      if (pathname === "/") {
+        const sections = navLinks.map((l) => l.sectionId);
+        const scrollPosition = window.scrollY + 120;
+
+        for (let i = sections.length - 1; i >= 0; i--) {
+          const el = document.getElementById(sections[i]);
+          if (el && el.offsetTop <= scrollPosition) {
+            setActiveSection(sections[i]);
+            break;
+          }
+        }
+      }
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
   }, [pathname]);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-    };
-    checkSession();
+  if (isAppRoute) {
+    return null;
+  }
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  // Fetch profile when session changes
-  useEffect(() => {
-    if (session?.user?.id) {
-      const fetchProfile = async () => {
-        try {
-          const profileData = await getProfile();
-          setProfile(profileData);
-          setProfileLoading(false);
-        } catch (err) {
-          console.error("Failed to fetch profile:", err);
-          setProfileLoading(false);
-        }
-      };
-      fetchProfile();
-    } else {
-      setProfile(null);
-      setProfileLoading(false);
-    }
-  }, [session]);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
-  };
-
-  // Determine which links to show based on authentication and role
-  const getNavLinks = () => {
-    const baseLinks = [
-      { name: "Home", href: "/" },
-      { name: "Internships", href: "/app/internships" },
-      { name: "Certificates", href: "/app/certificates" },
-      { name: "Bookings", href: "/app/bookings" },
-    ];
-
-    if (!profileLoading && profile) {
-      // Add profile link for authenticated users
-      baseLinks.push({ name: "Profile", href: "/app/profile" });
-      // Add admin link if user is admin
-      if (profile.role === "admin") {
-        baseLinks.push({ name: "Admin", href: "/app/admin" });
+  const handleNavClick = (sectionId: string) => {
+    setMobileMenuOpen(false);
+    if (pathname === "/") {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
       }
     }
-
-    return baseLinks;
   };
-
-  const navLinks = getNavLinks();
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 border-b ${
+      <header
+        className={`sticky top-0 inset-x-0 z-40 transition-all duration-300 ${
           scrolled
-            ? "bg-background/70 backdrop-blur-xl border-border shadow-sm"
-            : "bg-transparent border-transparent"
+            ? "bg-[#FAF8F5]/92 dark:bg-[#0B1917]/92 backdrop-blur-md shadow-xs border-b border-border/80 py-3"
+            : "bg-[#FAF8F5] dark:bg-[#0B1917] border-b border-border/40 py-4"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center transition-transform group-hover:scale-105">
-              <Brain className="h-6 w-6 text-primary" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+          {/* Brand Logo */}
+          <Link href="/#home" onClick={() => handleNavClick("home")} className="flex items-center gap-3 group">
+            <div className="h-10 w-10 rounded-2xl bg-[#114B43] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
+              <HeartPulse className="h-5 w-5 text-emerald-300" />
             </div>
-            <span className="font-outfit font-bold text-xl tracking-tight text-foreground">PSYCH Co.</span>
+            <div className="flex flex-col">
+              <span className="font-outfit font-bold text-xl sm:text-2xl text-foreground tracking-tight leading-none">
+                The Psych Co<span className="text-[#C2613B]">.</span>
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium tracking-wider uppercase flex items-center gap-1 mt-0.5">
+                <ShieldCheck className="h-2.5 w-2.5 text-emerald-600 inline" />
+                RCI-Registered Clinical Practice
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <div className="flex items-center gap-6">
-              {navLinks.map((link) => (
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {navLinks.map((link) => {
+              const isActive = pathname === "/" && activeSection === link.sectionId;
+              return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === link.href ? "text-foreground" : "text-muted-foreground"
+                  onClick={() => handleNavClick(link.sectionId)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    isActive
+                      ? "text-[#114B43] dark:text-emerald-300 font-semibold bg-[#E8F3F1] dark:bg-[#133D36]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 >
                   {link.name}
                 </Link>
-              ))}
-            </div>
-            <div className="flex items-center gap-4 border-l border-border pl-8">
-              {session ? (
-                <>
-                  <Link href="/app/profile" className="text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Account
-                  </Link>
-                  <Button variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={handleSignOut}>
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    Log In
-                  </Link>
-                  <Button asChild className="rounded-full shadow-md bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Link href="/sign-up">Sign Up</Link>
-                  </Button>
-                </>
-              )}
-            </div>
+              );
+            })}
+          </nav>
+
+          {/* CTA & Mobile Hamburger */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/#pathfinder"
+              onClick={() => handleNavClick("pathfinder")}
+              className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold text-[#114B43] dark:text-emerald-300 hover:text-[#C2613B] px-3.5 py-1.5 rounded-full border border-[#114B43]/20 hover:border-[#C2613B]/40 transition-colors"
+            >
+              <Compass className="h-3.5 w-3.5" />
+              <span>Path Finder</span>
+            </Link>
+
+            <Button
+              onClick={() => setApplyModalOpen(true)}
+              className="hidden sm:inline-flex bg-[#C2613B] hover:bg-[#a94f2d] text-white font-medium rounded-full px-5 py-2 text-sm shadow-xs transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Apply Now
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Button>
+
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-xl text-foreground hover:bg-muted transition-colors"
+              aria-label="Open mobile menu"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
           </div>
-
-          {/* Mobile Toggle */}
-          <button
-            className="md:hidden p-2 text-foreground"
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
         </div>
-      </motion.nav>
+      </header>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Drawer Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-2xl flex flex-col"
+            className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm lg:hidden flex justify-end"
           >
-            <div className="flex items-center justify-between p-4 h-20 border-b border-border">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <Brain className="h-6 w-6 text-primary" />
-                </div>
-                <span className="font-outfit font-bold text-xl text-foreground">PSYCH Co.</span>
-              </Link>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-foreground">
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center gap-8 p-8">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <Link
-                    href={link.href}
-                    className="text-3xl font-outfit font-bold text-foreground hover:text-primary transition-colors"
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 350, damping: 30 }}
+              className="w-full max-w-sm bg-card h-full p-6 flex flex-col justify-between shadow-2xl border-l border-border"
+            >
+              <div>
+                <div className="flex items-center justify-between pb-6 border-b border-border/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-xl bg-[#114B43] text-white flex items-center justify-center">
+                      <HeartPulse className="h-4 w-4 text-emerald-300" />
+                    </div>
+                    <span className="font-outfit font-bold text-lg text-foreground">
+                      The Psych Co.
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-1.5 rounded-full text-muted-foreground hover:bg-muted"
+                    aria-label="Close menu"
                   >
-                    {link.name}
-                  </Link>
-                </motion.div>
-              ))}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="w-full max-w-sm mt-8 flex flex-col gap-4"
-              >
-                {session ? (
-                  <>
-                    <Button asChild size="lg" className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                      <Link href="/app/profile">Account Profile</Link>
-                    </Button>
-                    <Button variant="outline" size="lg" className="w-full rounded-full border-border" onClick={handleSignOut}>
-                      Sign Out
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button asChild variant="outline" size="lg" className="w-full rounded-full border-border">
-                      <Link href="/login">Log In</Link>
-                    </Button>
-                    <Button asChild size="lg" className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                      <Link href="/sign-up">Sign Up Free</Link>
-                    </Button>
-                  </>
-                )}
-              </motion.div>
-            </div>
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="py-6 flex flex-col gap-2">
+                  {navLinks.map((link) => {
+                    const isActive = pathname === "/" && activeSection === link.sectionId;
+                    return (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        onClick={() => handleNavClick(link.sectionId)}
+                        className={`px-4 py-2.5 rounded-xl text-base font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#E8F3F1] dark:bg-[#133D36] text-[#114B43] dark:text-emerald-300 font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        {link.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-border/60 space-y-3">
+                <Link
+                  href="/#pathfinder"
+                  onClick={() => handleNavClick("pathfinder")}
+                  className="w-full py-2.5 rounded-full border border-[#114B43]/30 bg-[#FAF8F5] dark:bg-[#122522] text-[#114B43] dark:text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[#114B43]/10 transition-colors"
+                >
+                  <Compass className="h-4 w-4" />
+                  <span>Interactive Path Finder</span>
+                </Link>
+
+                <Button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setApplyModalOpen(true);
+                  }}
+                  className="w-full bg-[#C2613B] hover:bg-[#a94f2d] text-white font-medium rounded-full py-2.5 shadow-md flex items-center justify-center gap-2"
+                >
+                  Apply Now
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <div className="text-center text-[11px] text-muted-foreground">
+                  CRR: A111440 · RCI Registered Clinical Psychologist
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global Apply Modal */}
+      <ApplyModal
+        isOpen={applyModalOpen}
+        onClose={() => setApplyModalOpen(false)}
+      />
     </>
   );
 }
